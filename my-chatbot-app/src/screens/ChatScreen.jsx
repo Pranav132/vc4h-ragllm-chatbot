@@ -1,9 +1,11 @@
+import { SidebarWithHeader } from '../components/Sidebar'; 
+
 function ChatScreen() {
   return (
-    <div>
+    <SidebarWithHeader>
       <h1>Chat Screen</h1>
       <p>This is where the chat will happen.</p>
-    </div>
+    </SidebarWithHeader>
   );
 }
 
