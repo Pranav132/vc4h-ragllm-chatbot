@@ -14,92 +14,151 @@ import {
   useDisclosure,
   Menu,
   MenuButton,
-  MenuDivider,
   MenuItem,
   MenuList,
+  Modal, ModalOverlay, ModalContent,
+  ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
+  Input, Button
 } from '@chakra-ui/react'
 import {
-  FiHome,
-  FiTrendingUp,
-  FiCompass,
-  FiStar,
-  FiSettings,
   FiMenu,
-  FiBell,
+  FiLogOut,
   FiChevronDown,
+  FiEdit,
+  FiMoreVertical,
+  FiTrash2
 } from 'react-icons/fi'
+import { useAuth } from '../Providers/AuthContext';
+import { useState } from 'react';
 
 
-const LinkItems = [
-  { name: 'Home', icon: FiHome },
-  { name: 'Trending', icon: FiTrendingUp },
-  { name: 'Explore', icon: FiCompass },
-  { name: 'Favourites', icon: FiStar },
-  { name: 'Settings', icon: FiSettings },
-]
+const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
+    const handleNewChat = () => {
+      const newChatId = chats.length > 0 ? Math.max(...chats.map(c => c.id)) + 1 : 1;
+      const newChat = {
+        id: newChatId,
+        name: `Chat #${chats.length + 1}`
+      };
+      setChats([...chats, newChat]);
+    };
 
-const SidebarContent = ({ onClose, ...rest }) => {
-  return (
-    <Box
-      transition="3s ease"
-      bg={useColorModeValue('white', 'gray.900')}
-      borderRight="1px"
-      borderRightColor={useColorModeValue('gray.200', 'gray.700')}
-      w={{ base: 'full', md: 60 }}
-      pos="fixed"
-      h="full"
-      {...rest}>
-      <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
-        <Text fontSize="2xl" fontFamily="monospace" fontWeight="bold">
-          Logo
-        </Text>
-        <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
-      </Flex>
-      {LinkItems.map((link) => (
-        <NavItem key={link.name} icon={link.icon}>
-          {link.name}
-        </NavItem>
-      ))}
-    </Box>
-  )
-}
-
-const NavItem = ({ icon, children, ...rest }) => {
-  return (
-    <Box
-      as="a"
-      href="#"
-      style={{ textDecoration: 'none' }}
-      _focus={{ boxShadow: 'none' }}>
-      <Flex
-        align="center"
-        p="4"
-        mx="4"
-        borderRadius="lg"
-        role="group"
-        cursor="pointer"
-        _hover={{
-          bg: 'cyan.400',
-          color: 'white',
-        }}
+    const onDelete = (id) => {
+        setChats(chats.filter(chat => chat.id !== id));
+    };
+  
+    return (
+      <Box
+        transition="3s ease"
+        bg={useColorModeValue('white', 'gray.900')}
+        borderRight="1px"
+        borderRightColor={useColorModeValue('gray.200', 'gray.700')}
+        w={{ base: 'full', md: 60 }}
+        pos="fixed"
+        h="full"
         {...rest}>
-        {icon && (
-          <Icon
-            mr="4"
-            fontSize="16"
-            _groupHover={{
-              color: 'white',
-            }}
-            as={icon}
+        <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
+          <Text fontSize="2xl" fontFamily="monospace" fontWeight="bold">
+            RAG LLM
+          </Text>
+          <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
+        </Flex>
+        <Flex alignItems="center" justifyContent={"space-between"} px={6} pt={6} pb={4}>
+          <Text fontSize="lg" textDecoration="underline" fontWeight="semibold">
+            Previous Chats
+          </Text>
+          <IconButton
+            aria-label="New chat"
+            icon={<Icon as={FiEdit} />}
+            onClick={handleNewChat}
+            size="md"
+            ml={4}
+            bg={"none"}
           />
-        )}
-        {children}
-      </Flex>
-    </Box>
-  )
-}
+        </Flex>
+        <Box overflowY="auto" maxH="calc(100vh - 120px)" >
+          {chats.map((chat) => (
+            <ChatItem key={chat.id} chat={chat} onRename={onRename} onDelete={onDelete} />
+          ))}
+        </Box>
+      </Box>
+    );
+  };
+
+  const ChatItem = ({ chat, onRename, onDelete }) => {
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [newName, setNewName] = useState(chat.name);
+  
+    const handleRename = () => {
+      onRename(chat.id, newName);
+      onClose();
+    };
+  
+    return (
+      <>
+        <Flex
+          align="center"
+          pr="2"
+          pl="4"
+          py="4"
+          mx="4"
+          my="2"
+          borderRadius="lg"
+          role="group"
+          cursor="pointer"
+          _hover={{
+            border: '1px solid',
+            borderColor: 'gray.500',
+            color: 'black',
+            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
+          }}
+          transition="all 0.1s ease"
+        >
+          <Text flex="1" textAlign="left" fontWeight="medium">{chat.name}</Text>
+          <Menu>
+            <MenuButton
+              as={IconButton}
+              icon={<FiMoreVertical />}
+              variant="ghost"
+              aria-label="Options"
+              _hover={{ color: 'teal.300' }}
+            />
+            <MenuList >
+              <MenuItem icon={<FiEdit />} onClick={onOpen}>Rename</MenuItem>
+              <MenuItem icon={<FiTrash2 />} color={'red.500'} onClick={() => onDelete(chat.id)}>Delete</MenuItem>
+            </MenuList>
+          </Menu>
+        </Flex>
+  
+        {/* Rename Modal */}
+        <Modal isOpen={isOpen} onClose={onClose} isCentered>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Rename Chat</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="New chat name"
+                autoFocus
+              />
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" mr={3} onClick={handleRename}>
+                Save
+              </Button>
+              <Button onClick={onClose}>Cancel</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </>
+    );
+  };
 
 const MobileNav = ({ onOpen, ...rest }) => {
+
+  const { signOut, currentUser } = useAuth();
+    
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -124,11 +183,10 @@ const MobileNav = ({ onOpen, ...rest }) => {
         fontSize="2xl"
         fontFamily="monospace"
         fontWeight="bold">
-        Logo
+        RAG LLM
       </Text>
 
       <HStack spacing={{ base: '0', md: '6' }}>
-        <IconButton size="lg" variant="ghost" aria-label="open menu" icon={<FiBell />} />
         <Flex alignItems={'center'}>
           <Menu>
             <MenuButton py={2} transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
@@ -136,7 +194,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
                 <Avatar
                   size={'sm'}
                   src={
-                    'https://images.unsplash.com/photo-1619946794135-5bc917a27793?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9'
+                    currentUser.photoURL
                   }
                 />
                 <VStack
@@ -144,10 +202,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
                   alignItems="flex-start"
                   spacing="1px"
                   ml="2">
-                  <Text fontSize="sm">Justina Clark</Text>
-                  <Text fontSize="xs" color="gray.600">
-                    Admin
-                  </Text>
+                  <Text fontSize="sm">{currentUser.displayName}</Text>
                 </VStack>
                 <Box display={{ base: 'none', md: 'flex' }}>
                   <FiChevronDown />
@@ -157,11 +212,10 @@ const MobileNav = ({ onOpen, ...rest }) => {
             <MenuList
               bg={useColorModeValue('white', 'gray.900')}
               borderColor={useColorModeValue('gray.200', 'gray.700')}>
-              <MenuItem>Profile</MenuItem>
-              <MenuItem>Settings</MenuItem>
-              <MenuItem>Billing</MenuItem>
-              <MenuDivider />
-              <MenuItem>Sign out</MenuItem>
+                <MenuItem icon={<Icon as={FiLogOut} color="red.500" />} color="red.600" _hover={{ bg: "red.100" }} onClick={signOut}>
+                    Sign out
+                </MenuItem>
+
             </MenuList>
           </Menu>
         </Flex>
@@ -172,10 +226,25 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
 export const SidebarWithHeader = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const [chats, setChats] = useState([
+    { id: 1, name: 'Alpha Team' },
+    { id: 2, name: 'Beta Group' },
+    { id: 3, name: 'Gamma Chat' },
+  ]);
+
+  const renameChat = (id, newName) => {
+    const updatedChats = chats.map(chat => {
+      if (chat.id === id) {
+        return { ...chat, name: newName };
+      }
+      return chat;
+    });
+    setChats(updatedChats);
+  };
 
   return (
-    <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
-      <SidebarContent onClose={() => onClose} display={{ base: 'none', md: 'block' }} />
+    <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')} overflowX={"hidden"}>
+      <SidebarContent chats={chats} onRename={renameChat} setChats={setChats} onClose={() => onClose} display={{ base: 'none', md: 'block' }} />
       <Drawer
         isOpen={isOpen}
         placement="left"
@@ -184,12 +253,12 @@ export const SidebarWithHeader = ({ children }) => {
         onOverlayClick={onClose}
         size="full">
         <DrawerContent>
-          <SidebarContent onClose={onClose} />
+        <SidebarContent chats={chats} setChats={setChats} onRename={renameChat} onClose={onClose} />
         </DrawerContent>
       </Drawer>
       {/* mobilenav */}
       <MobileNav onOpen={onOpen} />
-      <Box ml={{ base: 0, md: '250px' }} p="4" width="full">
+      <Box ml={{ base: 0, md: '250px' }} p="4" width={{ base: '100vw', sm: '80vw' }}>
         {children}
       </Box>
     </Box>
