@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box, Text, Flex, VStack, SkeletonText, Input, Button, useColorModeValue
 } from '@chakra-ui/react';
@@ -8,10 +8,6 @@ function ChatScreen() {
   const [chats, setChats] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
-  useEffect(() => {
-    // Simulate initial greeting from the chatbot
-    simulateBotResponse('Hello, how can I help you today?');
-  }, []);
 
   const simulateBotResponse = (question) => {
     // Start by adding a bot response that is loading
@@ -55,7 +51,8 @@ function ChatScreen() {
   return (
     <SidebarWithHeader>
       <Flex direction="column" h="full" p={4} w="100%">
-        <VStack flex="1" overflowY="auto" spacing={4}>
+        {chats.length > 0 ? (
+          <VStack flex="1" overflowY="auto" spacing={4}>
           {chats.map((chat, index) => (
             <Flex key={index} alignSelf={chat.sender === 'bot' ? 'flex-start' : 'flex-end'}>
               <Box
@@ -74,7 +71,19 @@ function ChatScreen() {
             </Flex>
           ))}
         </VStack>
-        <Flex mt={4} p={4} width="100%" align="center">
+        ) : (
+          <Flex width="100%" height="60vh" justifyContent="center" alignItems="center">
+            <Box>
+              <Text fontSize="5xl" fontFamily="monospace" fontWeight="bold" textAlign='center'>
+                RAG LLM
+              </Text>
+              <Text  textAlign='center' py={4} fontFamily="monospace" fontSize="md">
+                How can I help you today?
+              </Text>
+            </Box>
+          </Flex>  
+        )}
+        <Flex mt={4} p={4} width="100%" align="center" position="absolute" bottom="0" left="0%">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
