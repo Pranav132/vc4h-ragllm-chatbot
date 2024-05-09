@@ -8,6 +8,7 @@ import {
   VStack,
   Icon,
   useColorModeValue,
+  useColorMode,
   Text,
   Drawer,
   DrawerContent,
@@ -26,7 +27,9 @@ import {
   FiChevronDown,
   FiEdit,
   FiMoreVertical,
-  FiTrash2
+  FiTrash2,
+  FiSun,
+  FiMoon
 } from 'react-icons/fi'
 import { useAuth } from '../Providers/AuthContext';
 import { useState } from 'react';
@@ -108,7 +111,6 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
           _hover={{
             border: '1px solid',
             borderColor: 'gray.500',
-            color: 'black',
             boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
           }}
           transition="all 0.1s ease"
@@ -158,69 +160,77 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
 const MobileNav = ({ onOpen, ...rest }) => {
 
   const { signOut, currentUser } = useAuth();
+  const { colorMode, toggleColorMode } = useColorMode();
+  const bg = useColorModeValue('white', 'gray.900');
+  const borderBottomColor = useColorModeValue('gray.200', 'gray.700');
     
   return (
     <Flex
-      ml={{ base: 0, md: 60 }}
-      px={{ base: 4, md: 4 }}
-      height="20"
-      alignItems="center"
-      bg={useColorModeValue('white', 'gray.900')}
-      borderBottomWidth="1px"
-      borderBottomColor={useColorModeValue('gray.200', 'gray.700')}
-      justifyContent={{ base: 'space-between', md: 'flex-end' }}
-      {...rest}>
+    ml={{ base: 0, md: 60 }}
+    px={{ base: 4, md: 4 }}
+    height="20"
+    alignItems="center"
+    bg={bg}
+    borderBottomWidth="1px"
+    borderBottomColor={borderBottomColor}
+    justifyContent={{ base: 'space-between', md: 'flex-end' }}
+    {...rest}>
+    <IconButton
+      display={{ base: 'flex', md: 'none' }}
+      onClick={onOpen}
+      variant="outline"
+      aria-label="open menu"
+      icon={<FiMenu />}
+    />
+
+    <Text
+      display={{ base: 'flex', md: 'none' }}
+      fontSize="2xl"
+      fontFamily="monospace"
+      fontWeight="bold">
+      RAG LLM
+    </Text>
+
+    <HStack spacing={{ base: '0', md: '6' }}>
       <IconButton
-        display={{ base: 'flex', md: 'none' }}
-        onClick={onOpen}
-        variant="outline"
-        aria-label="open menu"
-        icon={<FiMenu />}
+        size="lg"
+        variant="ghost"
+        icon={colorMode === 'light' ? <FiMoon /> : <FiSun />}
+        onClick={toggleColorMode}
+        aria-label="Toggle color mode"
       />
 
-      <Text
-        display={{ base: 'flex', md: 'none' }}
-        fontSize="2xl"
-        fontFamily="monospace"
-        fontWeight="bold">
-        RAG LLM
-      </Text>
-
-      <HStack spacing={{ base: '0', md: '6' }}>
-        <Flex alignItems={'center'}>
-          <Menu>
-            <MenuButton py={2} transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
-              <HStack>
-                <Avatar
-                  size={'sm'}
-                  src={
-                    currentUser.photoURL
-                  }
-                />
-                <VStack
-                  display={{ base: 'none', md: 'flex' }}
-                  alignItems="flex-start"
-                  spacing="1px"
-                  ml="2">
-                  <Text fontSize="sm">{currentUser.displayName}</Text>
-                </VStack>
-                <Box display={{ base: 'none', md: 'flex' }}>
-                  <FiChevronDown />
-                </Box>
-              </HStack>
-            </MenuButton>
-            <MenuList
-              bg={useColorModeValue('white', 'gray.900')}
-              borderColor={useColorModeValue('gray.200', 'gray.700')}>
-                <MenuItem icon={<Icon as={FiLogOut} color="red.500" />} color="red.600" _hover={{ bg: "red.100" }} onClick={signOut}>
-                    Sign out
-                </MenuItem>
-
-            </MenuList>
-          </Menu>
-        </Flex>
-      </HStack>
-    </Flex>
+      <Flex alignItems={'center'}>
+        <Menu>
+          <MenuButton py={2} transition="all 0.3s" _focus={{ boxShadow: 'none' }}>
+            <HStack>
+              <Avatar
+                size={'sm'}
+                src={currentUser.photoURL}
+              />
+              <VStack
+                display={{ base: 'none', md: 'flex' }}
+                alignItems="flex-start"
+                spacing="1px"
+                ml="2">
+                <Text fontSize="sm">{currentUser.displayName}</Text>
+              </VStack>
+              <Box display={{ base: 'none', md: 'flex' }}>
+                <FiChevronDown />
+              </Box>
+            </HStack>
+          </MenuButton>
+          <MenuList
+            bg={bg}
+            borderColor={borderBottomColor}>
+            <MenuItem icon={<Icon as={FiLogOut} color="red.500" />} color="red.600" _hover={{ bg: "red.100" }} onClick={signOut}>
+                Sign out
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      </Flex>
+    </HStack>
+  </Flex>
   )
 }
 
