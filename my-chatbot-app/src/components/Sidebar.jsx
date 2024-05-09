@@ -258,7 +258,7 @@ export const SidebarWithHeader = ({ children }) => {
       </Drawer>
       {/* mobilenav */}
       <MobileNav onOpen={onOpen} />
-      <Box ml={{ base: 0, md: '250px' }} p="4" width={{ base: '100vw', sm: '80vw' }}>
+      <Box ml={{ base: 0, md: '250px' }} p="4" width={{ base: '100vw', md: '80vw' }}>
         {children}
       </Box>
     </Box>

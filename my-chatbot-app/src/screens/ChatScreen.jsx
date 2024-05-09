@@ -10,31 +10,41 @@ function ChatScreen() {
   const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
-    // Simulate fetching chats
+    // Simulate fetching chats from a chatbot
     setTimeout(() => {
-      setChats(['Hello, how can I help you today?']); // Initial chat loaded
+      setChats([{ text: 'Hello, how can I help you today?', sender: 'bot' }]); // Initial chat loaded from bot
       setIsLoading(false);
     }, 2000);
   }, []);
 
   const sendChat = () => {
     if (newMessage) {
-      setChats([...chats, newMessage]);
+      setChats([...chats, { text: newMessage, sender: 'user' }]);
       setNewMessage("");
     }
   };
 
+  const inputBg = useColorModeValue("white", "gray.700");
+
   return (
     <SidebarWithHeader>
-      <Flex direction="column" h="full" p={4} w="calc(100%)"> 
-        <VStack flex="1" overflowY="auto">
+      <Flex direction="column" h="full" p={4} w="100%"> 
+        <VStack flex="1" overflowY="auto" spacing={4}>
           {isLoading ? (
             <Spinner size="xl" />
           ) : (
             chats.map((chat, index) => (
-              <Skeleton isLoaded={!isLoading} key={index}>
-                <Text p={4} borderRadius="lg">{chat}</Text>
-              </Skeleton>
+              <Flex key={index} alignSelf={chat.sender === 'bot' ? 'flex-start' : 'flex-end'}>
+                <Box 
+                  p={3} 
+                  bg={chat.sender === 'bot' ? 'blue.100' : 'teal.500'}
+                  borderRadius="lg"
+                  boxShadow="md"
+                  maxW="100%"
+                >
+                  <Text color={chat.sender === 'bot' ? 'black' : 'white'}>{chat.text}</Text>
+                </Box>
+              </Flex>
             ))
           )}
         </VStack>
@@ -43,10 +53,12 @@ function ChatScreen() {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type your message here..."
-            flexGrow={1}  // Makes the input flexibly grow to use available space
-            mr={2}  // Adds a margin to the right for spacing between input and button
+            flexGrow={1}
+            mr={2}
+            bg={inputBg}
+            borderRadius="full"
           />
-          <Button onClick={sendChat} colorScheme="teal">Send</Button>
+          <Button onClick={sendChat} colorScheme="teal" borderRadius="full">Send</Button>
         </Flex>
       </Flex>
     </SidebarWithHeader>
