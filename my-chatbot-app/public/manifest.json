@@ -1,6 +1,6 @@
 {
-    "short_name": "App",
-    "name": "My Progressive Web App",
+    "short_name": "RAGLLM",
+    "name": "VC4H RAG LLM",
     "icons": [
       {
         "src": "favicon.ico",

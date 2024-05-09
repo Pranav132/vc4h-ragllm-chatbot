@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../firebase'; 
 
 const AuthContext = createContext(null);
 
@@ -8,6 +9,7 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const user = localStorage.getItem('user');
@@ -15,6 +17,15 @@ export function AuthProvider({ children }) {
       setCurrentUser(JSON.parse(user));
     }
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+        setCurrentUser(user);
+        setLoading(false);
+    });
+
+    return unsubscribe; // Unsubscribe to the listener when the component unmounts
+}, []);
 
   const signIn = (user) => {
     localStorage.setItem('user', JSON.stringify(user));
@@ -29,7 +40,8 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     signIn,
-    signOut
+    signOut,
+    loading
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

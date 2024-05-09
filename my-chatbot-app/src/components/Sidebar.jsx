@@ -19,7 +19,9 @@ import {
   MenuList,
   Modal, ModalOverlay, ModalContent,
   ModalHeader, ModalFooter, ModalBody, ModalCloseButton,
-  Input, Button
+  Input, Button,
+  Spinner,
+  useToast
 } from '@chakra-ui/react'
 import {
   FiMenu,
@@ -33,22 +35,85 @@ import {
 } from 'react-icons/fi'
 import { useAuth } from '../Providers/AuthContext';
 import { useState } from 'react';
-
+import { db } from '../firebase';
+import { useEffect } from 'react';
+import { doc, updateDoc, collection, addDoc, query, deleteDoc, getDocs, where } from "firebase/firestore";
 
 const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
-    const handleNewChat = () => {
-      const newChatId = chats.length > 0 ? Math.max(...chats.map(c => c.id)) + 1 : 1;
-      const newChat = {
-        id: newChatId,
-        name: `Chat #${chats.length + 1}`
-      };
-      setChats([...chats, newChat]);
-    };
 
-    const onDelete = (id) => {
-        setChats(chats.filter(chat => chat.id !== id));
+  const [chatId, setChatId] = useState(null);
+
+    useEffect(() => {
+        const pathSegments = window.location.pathname.split('/');
+        const idIndex = pathSegments.findIndex(segment => segment === 'chat') + 1;
+        if (idIndex !== 0 && pathSegments[idIndex]) {
+            setChatId(pathSegments[idIndex]);
+        }
+    }, []);
+
+  const [loading, setLoading] = useState(false);
+
+  const { currentUser } = useAuth();
+
+  const toast = useToast();
+
+  const handleNewChat = async () => {
+    setLoading(true);
+    const newChatName = `New Chat`;
+    console.log(newChatName);
+    const newChat = {
+      name: newChatName,
+      user: currentUser.email,
+      data: []
     };
+    const docRef = await addDoc(collection(db, "chats"), newChat);
+    newChat.id = docRef.id; // Use the auto-generated ID from Firestore
+    setChats([...chats, newChat]);
+    setLoading(false);
+  };
   
+
+  const onDelete = async (id) => {
+    if (chats.length < 2){
+      toast({
+        title: "Error deleting chat",
+        description: "User must always have one chat!",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+        position: "top-right"
+      });
+    }
+    else{
+      try {
+        // Attempt to delete the chat from Firestore
+        await deleteDoc(doc(db, "chats", id));
+        
+        // Filter out the deleted chat from the local state
+        const updatedChats = chats.filter(chat => chat.id !== id);
+        console.log(updatedChats)
+        setChats(updatedChats);
+        console.log(id)
+        console.log(chatId)
+    
+        // Check if the deleted chat is the current one
+        if (id == chatId) {
+          if (updatedChats.length > 0) {
+            // Redirect to the first available chat if there are other chats
+            console.log(`/chat/${updatedChats[0].id}`)
+            window.location = `/chat/${updatedChats[0].id}`;
+          } else {
+            // Handle the case when no chats are left (redirect to a general page or display a message)
+            window.location = "/welcome"; // or any other appropriate location
+          }
+        }
+      } catch (error) {
+        console.error("Failed to delete the chat:", error);
+        // Optionally handle the error, e.g., show a toast notification
+      }
+    }
+  };
+
     return (
       <Box
         transition="3s ease"
@@ -79,9 +144,14 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
           />
         </Flex>
         <Box overflowY="auto" maxH="calc(100vh - 120px)" >
-          {chats.map((chat) => (
-            <ChatItem key={chat.id} chat={chat} onRename={onRename} onDelete={onDelete} />
-          ))}
+          {loading ? (
+            <Spinner />
+          ) : (
+            chats.map((chat) => (
+              <ChatItem key={chat.id} chat={chat} onRename={onRename} onDelete={onDelete} />
+            ))
+          )}
+          {}
         </Box>
       </Box>
     );
@@ -94,6 +164,11 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
     const handleRename = () => {
       onRename(chat.id, newName);
       onClose();
+    };
+
+    // Prevent event propagation to stop the chat from changing the URL
+    const stopPropagation = (e) => {
+      e.stopPropagation();
     };
   
     return (
@@ -114,6 +189,7 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
             boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
           }}
           transition="all 0.1s ease"
+          onClick={() => (window.location = `/chat/${chat.id}`)}
         >
           <Text flex="1" textAlign="left" fontWeight="medium">{chat.name}</Text>
           <Menu>
@@ -122,11 +198,12 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
               icon={<FiMoreVertical />}
               variant="ghost"
               aria-label="Options"
+              onClick={stopPropagation} // Stop propagation when clicking the menu button
               _hover={{ color: 'teal.300' }}
             />
-            <MenuList >
+            <MenuList onClick={stopPropagation}>
               <MenuItem icon={<FiEdit />} onClick={onOpen}>Rename</MenuItem>
-              <MenuItem icon={<FiTrash2 />} color={'red.500'} onClick={() => onDelete(chat.id)}>Delete</MenuItem>
+              <MenuItem icon={<FiTrash2 />} color={'red.500'} onClick={() => { onDelete(chat.id); }}>Delete</MenuItem>
             </MenuList>
           </Menu>
         </Flex>
@@ -140,7 +217,7 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
             <ModalBody pb={6}>
               <Input
                 value={newName}
-                onChange={(e) => setNewName(e.target.value)}
+                onChange={(e) => { e.stopPropagation(); setNewName(e.target.value); }}
                 placeholder="New chat name"
                 autoFocus
               />
@@ -156,6 +233,7 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
       </>
     );
   };
+
 
 const MobileNav = ({ onOpen, ...rest }) => {
 
@@ -236,13 +314,31 @@ const MobileNav = ({ onOpen, ...rest }) => {
 
 export const SidebarWithHeader = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const [chats, setChats] = useState([
-    { id: 1, name: 'Alpha Team' },
-    { id: 2, name: 'Beta Group' },
-    { id: 3, name: 'Gamma Chat' },
-  ]);
+  const [chats, setChats] = useState([]);
 
-  const renameChat = (id, newName) => {
+  const chatsRef = collection(db, "chats");
+
+  const { currentUser } = useAuth();
+
+  const loadChats = async () => {
+    const q = query(collection(db, "chats"), where("user", "==", currentUser.email));
+    const snapshot = await getDocs(q);
+    const chatsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setChats(chatsData);
+  };
+
+  useEffect(() => {
+    loadChats();
+  }, []);
+
+
+  const renameChat = async (id, newName) => {
+    // const q = query(collection(db, "chats"), where("id", "==", id));
+
+    await updateDoc(doc(db, "chats", id), {
+      name: newName
+    });
+
     const updatedChats = chats.map(chat => {
       if (chat.id === id) {
         return { ...chat, name: newName };

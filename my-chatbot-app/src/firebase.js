@@ -1,6 +1,7 @@
 // src/firebase.js
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBXWJCcVHu_gHNn7ec1ILqhlK5TUGPMiLw",
@@ -18,4 +19,6 @@ provider.setCustomParameters({
   'hd': 'ashoka.edu.in'  // Restricts to your educational domain
 });
 
-export { auth, provider };
+const db = getFirestore(app);
+
+export { db, auth, provider };
