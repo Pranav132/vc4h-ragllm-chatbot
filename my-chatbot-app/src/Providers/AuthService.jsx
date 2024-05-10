@@ -32,7 +32,7 @@ export const signInWithGoogle = async (signIn, handleToast) => {
       
       // Redirect to the chat page with the new chat ID
       setTimeout(() => {
-        window.location = `/chat/${docRef.id}`;
+        window.location = `/chats/${docRef.id}`;
       }, 3000);
     } else {
       await auth.signOut();
