@@ -45,7 +45,7 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
 
     useEffect(() => {
         const pathSegments = window.location.pathname.split('/');
-        const idIndex = pathSegments.findIndex(segment => segment === 'chat') + 1;
+        const idIndex = pathSegments.findIndex(segment => segment === 'chats') + 1;
         if (idIndex !== 0 && pathSegments[idIndex]) {
             setChatId(pathSegments[idIndex]);
         }
