@@ -70,6 +70,7 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
     newChat.id = docRef.id; // Use the auto-generated ID from Firestore
     setChats([...chats, newChat]);
     setLoading(false);
+    window.location = `/chats/${newChat.id}`;
   };
   
 

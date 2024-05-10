@@ -66,28 +66,51 @@ function ChatScreen() {
     }
   }, [chatId]);
   
+  function cleanResponse(text) {
+    // Remove instruction tags and content between them, and also remove <s> </s> tags
+    const cleanedText = text.replace(/\[INST\].*?\[\/INST\]/gs, '').replace(/<\/?s>/g, '');
 
+    // Trim whitespace from the start and end of the string
+    return cleanedText.trim();
+}
 
-  const simulateBotResponse = (question) => {
+  const simulateBotResponse = async (question) => {
     const initialBotResponse = { text: `Fetching response for: ${question}`, sender: 'bot', isLoading: true };
     setChats(currentChats => [...currentChats, initialBotResponse]);
     const chatIndex = chats.length; // Get current length before the update
   
-    setTimeout(async () => {
-      const responseText = `Response to: ${question}`;
-      updateChatAtIndex(chatIndex+1, responseText);
+    try {
+      // API call to get the response
+      const response = await fetch('http://10.1.23.188:8502/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const { answer } = await response.json();
+      const responseText = cleanResponse(answer) || `No response received.`;
+  
+      // Update chat with the actual response
+      updateChatAtIndex(chatIndex + 1, responseText);
   
       // Optionally update Firestore as well if bot responses are stored
       const chatRef = doc(db, "chats", chatId);
-      try {
-        await updateDoc(chatRef, {
-          data: arrayUnion({...initialBotResponse, text: responseText, isLoading: false}) // Update Firestore data
-        });
-      } catch (error) {
-        console.error("Failed to update bot response:", error);
-      }
-    }, 2000);
+      await updateDoc(chatRef, {
+        data: arrayUnion({...initialBotResponse, text: responseText, isLoading: false}) // Update Firestore data
+      });
+  
+    } catch (error) {
+      console.error("Failed to get bot response:", error.message);
+      updateChatAtIndex(chatIndex + 1, "Failed to get response."); // Update chat to show failure
+    }
   };
+  
 
  const addChat = async (text, sender) => {
   const newChat = { text, sender, isLoading: false }; // Initially set to loading
@@ -187,6 +210,12 @@ const updateChatAtIndex = (index, text) => {
               bg={inputBg}
               borderRadius="full"
               boxShadow="0px 2px 6px rgba(0, 0, 0, 0.1)" // Optional: Adds subtle shadow to the input
+              onKeyPress={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) { // Check if Enter key is pressed and not Shift+Enter
+                  event.preventDefault(); // Prevent the default action to avoid form submission or line breaks
+                  sendChat(); // Call the sendChat function
+                }
+              }}
             />
             <Button onClick={sendChat} colorScheme="teal" borderRadius="full">Send</Button>
           </Flex>
