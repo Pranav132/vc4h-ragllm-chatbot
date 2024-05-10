@@ -5,6 +5,7 @@ import WelcomeScreen from './screens/WelcomeScreen';
 import { useAuth } from './Providers/AuthContext';
 import { useEffect } from 'react';
 import { Spinner, Flex } from '@chakra-ui/react';
+import Page404 from './screens/404';
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={currentUser ? <Navigate replace to="/welcome" /> : <AuthScreen />} />
         <Route path="/chats/:id" element={!currentUser ? <Navigate replace to="/" /> : <ChatScreen />} />
         <Route path="/welcome" element={!currentUser ? <Navigate replace to="/" /> : <WelcomeScreen />} />
+        <Route name="404" path="*" element={<Page404 />} />
       </Routes>
     </Router>
   );
