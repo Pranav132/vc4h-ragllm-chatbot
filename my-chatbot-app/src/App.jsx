@@ -18,7 +18,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={currentUser ? <Navigate replace to="/welcome" /> : <AuthScreen />} />
-        <Route path="/chat/:id" element={!currentUser ? <Navigate replace to="/" /> : <ChatScreen />} />
+        <Route path="/chats/:id" element={!currentUser ? <Navigate replace to="/" /> : <ChatScreen />} />
         <Route path="/welcome" element={!currentUser ? <Navigate replace to="/" /> : <WelcomeScreen />} />
       </Routes>
     </Router>

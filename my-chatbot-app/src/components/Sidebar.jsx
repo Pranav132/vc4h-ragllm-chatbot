@@ -100,8 +100,8 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
         if (id == chatId) {
           if (updatedChats.length > 0) {
             // Redirect to the first available chat if there are other chats
-            console.log(`/chat/${updatedChats[0].id}`)
-            window.location = `/chat/${updatedChats[0].id}`;
+            console.log(`/chats/${updatedChats[0].id}`)
+            window.location = `/chats/${updatedChats[0].id}`;
           } else {
             // Handle the case when no chats are left (redirect to a general page or display a message)
             window.location = "/welcome"; // or any other appropriate location
@@ -189,7 +189,7 @@ const SidebarContent = ({ chats, setChats, onClose, onRename, ...rest }) => {
             boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)'
           }}
           transition="all 0.1s ease"
-          onClick={() => (window.location = `/chat/${chat.id}`)}
+          onClick={() => (window.location = `/chats/${chat.id}`)}
         >
           <Text flex="1" textAlign="left" fontWeight="medium">{chat.name}</Text>
           <Menu>
