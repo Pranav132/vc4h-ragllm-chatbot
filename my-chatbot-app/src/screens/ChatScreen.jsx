@@ -13,6 +13,7 @@ function ChatScreen() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatId, setChatId] = useState(null);
+  const [isBotResponding, setIsBotResponding] = useState(false);
 
   useEffect(() => {
     const pathSegments = window.location.pathname.split('/');
@@ -75,6 +76,7 @@ function ChatScreen() {
 }
 
   const simulateBotResponse = async (question) => {
+    setIsBotResponding(true);
     const initialBotResponse = { text: `Fetching response for: ${question}`, sender: 'bot', isLoading: true };
     setChats(currentChats => [...currentChats, initialBotResponse]);
     const chatIndex = chats.length; // Get current length before the update
@@ -109,6 +111,8 @@ function ChatScreen() {
       console.error("Failed to get bot response:", error.message);
       updateChatAtIndex(chatIndex + 1, "Failed to get response."); // Update chat to show failure
     }
+
+    setIsBotResponding(false); // Re-enable input after response or failure
   };
   
 
@@ -216,8 +220,9 @@ const updateChatAtIndex = (index, text) => {
                   sendChat(); // Call the sendChat function
                 }
               }}
+              disabled={isBotResponding}
             />
-            <Button onClick={sendChat} colorScheme="teal" borderRadius="full">Send</Button>
+            <Button onClick={sendChat} colorScheme="teal" borderRadius="full" disabled={isBotResponding}>Send</Button>
           </Flex>
 
           </>
